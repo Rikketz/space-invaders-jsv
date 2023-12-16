@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'pixel';
+    src: url('./assets/arcade.TTF');
+}
+
+body{
+    margin: 0;
+}
+
+.contenedorJuego{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid white;
+    width: 1200px;
+}
+
+.contenedorPuntuacion{
+    width: 100%;
+    background-color: black;
+    border: solid 3px white;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.puntuacion{
+    font-family: 'pixel';
+    margin-left: 10px;
+    font-size: 20px;
+    font-family: sans-serif;
+    color: white;
+}
+.texto{
+    font-family: 'pixel';
+}
