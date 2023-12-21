@@ -2,11 +2,35 @@ const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 const tableroJuego = document.querySelector('.tableroJuego');
 const $numeroPuntuacion = document.querySelector('.numeroPuntuacion');
+const $numeroHiScore = document.querySelector('.numeroHiScore');
+const $insertCoin = document.querySelector('.insertCoin');
+const $gameOverScreen = document.querySelector('.gameOver');
+const $gameOverButton = document.querySelector('.gameOverButton');
+const $gameStart = document.querySelector('.gameStart');
+const $gameStartButton = document.querySelector('.gameStartButton');
 let puntos = 0;
-let hiScore = 0;
+let hiScore;
+
+const storedHiScore = localStorage.getItem('hiScore');
+if (storedHiScore !== null) {
+    hiScore = parseInt(storedHiScore);
+} else {
+    hiScore = 0;
+}
+
+$numeroHiScore.innerHTML = `${hiScore}`;
 
 canvas.width = 1200;
 canvas.height = 780;
+
+// Intervalo para que las letras de Insert Coin se escondan y se muestren para mostrar el efecto llamativo
+setInterval(function () {
+    if ($insertCoin.classList.contains('insertCoin')) {
+        $insertCoin.classList.toggle('hidden');
+    } else {
+        $insertCoin.className = 'insertCoin';
+    }
+}, 1000);
 
 class Player {
     constructor() {
@@ -145,7 +169,7 @@ class Invader {
         const image = new Image();
         image.src = './assets/invader.png'
         image.onload = () => {
-            const scale = 0.10;
+            const scale = 0.08;
             this.image = image;
             this.width = image.width * scale;
             this.height = image.height * scale;
@@ -261,8 +285,10 @@ let frames = 0;
 let randomInterval = Math.floor(Math.random() * 500) + 500
 let game = {
     over: false,
-    active: true
+    active: false
 }
+let invaderShootInterval = 100; // Se modifica este valor para determinar cada cuanto dispararan los invaders. A valor más alto, tardarán más. El valor es el frames
+let invaderShootSpeedup = 0.5;
 
 
 
@@ -304,9 +330,18 @@ function crearParticulas({object, color, fades}){
 
 
 function animate(){
+
     if (!game.active) {
         return
     }
+
+    // if (frames % 500 === 0){
+    //     // Con esto se aumenta la velocidad de disparo cada 500 frames
+    //     invaderShootSpeedup += 0.1; 
+    // }
+
+    // invaderShootInterval = Math.max(1, Math.floor(invaderShootInterval * invaderShootSpeedup));
+
     requestAnimationFrame(animate);
     c.fillStyle = 'black';
     c.fillRect(0, 0, canvas.width, canvas.height);
@@ -350,6 +385,7 @@ function animate(){
                 }, 0)
                 setTimeout(() => {
                     game.active = false;
+                    $gameOverScreen.classList.remove('hiddenGameOver')
                 }, 2000)
 
                 crearParticulas({
@@ -378,9 +414,11 @@ function animate(){
         grid.invaders.forEach((invader, index) => {
             invader.update({velocity: grid.velocity});
                 // Se crean disparos de enemigos
-            if (frames % 100 ===0 && grid.invaders.length > 0) {
-                grid.invaders[Math.floor(Math.random() * grid.invaders.length)].shoot(invaderProjectiles);
-            }
+            
+
+                if (frames % invaderShootInterval === 0 && Math.random() < 0.1) {
+                    invader.shoot(invaderProjectiles);
+                }
             projectiles.forEach((projectile, i) => {
                 if (projectile.position.y - projectile.radius <= invader.position.y + invader.height
                     && projectile.position.x + projectile.radius >= invader.position.x
@@ -389,6 +427,11 @@ function animate(){
                     ) {
                     
                         puntos += 10;
+                        if (puntos > hiScore) {
+                            hiScore = puntos;
+                            localStorage.setItem('hiScore', hiScore.toString());
+                            $numeroHiScore.innerHTML= `${hiScore}`
+                        }
                         $numeroPuntuacion.innerHTML = puntos
 
                     setTimeout(() => {
@@ -455,12 +498,13 @@ function animate(){
 
 
     frames++
+
 }
 
-animate(    );
 
 addEventListener('keydown', ({key}) => {
     if (game.over) {
+
         return
     }
     switch (key) {
@@ -503,4 +547,15 @@ addEventListener('keyup', ({key}) => {
             console.log('shoot');
             break; 
     }
+})
+
+$gameStartButton.addEventListener('click', () => {
+    $gameStart.classList.add('hiddenGameOver');
+    game.active = true
+    animate(    );
+
+})
+
+$gameOverButton.addEventListener('click', () => {
+    location.reload();
 })
